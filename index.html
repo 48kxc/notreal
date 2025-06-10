@@ -3,67 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Webhook Repeater (Advanced)</title>
+  <title>Webhook Repeater (Discord Style)</title>
   <style>
+    :root {
+      --background: #2f3136;
+      --foreground: #36393f;
+      --text: #dcddde;
+      --header: #ffffff;
+      --input: #202225;
+      --button: #5865F2;
+      --button-hover: #4752c4;
+      --success: #43b581;
+      --error: #f04747;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px;
+      padding: 30px;
     }
+
+    h2, h4 {
+      color: var(--header);
+    }
+
     input, textarea, button {
-      margin: 10px;
-      padding: 12px;
+      margin: 8px 0;
+      padding: 10px;
       width: 320px;
       border: none;
       border-radius: 6px;
+      background-color: var(--input);
+      color: var(--text);
     }
+
     textarea {
       height: 80px;
       resize: none;
     }
+
     button {
-      background-color: #5865F2;
+      background-color: var(--button);
       color: white;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.2s;
     }
+
     button:hover {
-      background-color: #4752c4;
+      background-color: var(--button-hover);
     }
+
     #progressBar {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       margin-top: 20px;
       max-width: 400px;
+      background-color: var(--foreground);
+      padding: 10px;
+      border-radius: 6px;
     }
+
     .dot {
       font-size: 20px;
       margin: 4px;
       width: 20px;
       text-align: center;
     }
-    .pending { color: gray; }
-    .sent { color: lightgreen; }
-    .error { color: red; }
+
+    .pending {
+      color: gray;
+    }
+
+    .sent {
+      color: var(--success);
+    }
+
+    .error {
+      color: var(--error);
+    }
+
+    .section {
+      background-color: var(--foreground);
+      padding: 16px;
+      border-radius: 8px;
+      margin: 10px 0;
+      width: 340px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    label {
+      font-size: 0.85em;
+      display: block;
+      margin-bottom: 4px;
+      color: #b9bbbe;
+    }
   </style>
 </head>
 <body>
-  <h2>Send Message 30x to Discord Webhook</h2>
+  <h2>🔁 Webhook Repeater</h2>
 
-  <input id="webhookUrl" placeholder="Discord Webhook URL" />
-  <textarea id="message" placeholder="Enter message (optional if using embed)"></textarea>
+  <div class="section">
+    <label for="webhookUrl">Webhook URL</label>
+    <input id="webhookUrl" placeholder="https://discord.com/api/webhooks/..." />
 
-  <h4 style="margin-top:20px;">Embed (Optional)</h4>
-  <input id="embedTitle" placeholder="Embed Title" />
-  <textarea id="embedDescription" placeholder="Embed Description"></textarea>
-  <input id="embedColor" placeholder="Embed Color (Hex or Decimal)" />
+    <label for="message">Message Content</label>
+    <textarea id="message" placeholder="Plain message (optional if using embed)"></textarea>
+  </div>
+
+  <div class="section">
+    <h4>📎 Embed Options (Optional)</h4>
+
+    <label for="embedTitle">Embed Title</label>
+    <input id="embedTitle" placeholder="Embed Title" />
+
+    <label for="embedDescription">Embed Description</label>
+    <textarea id="embedDescription" placeholder="Embed Description"></textarea>
+
+    <label for="embedColor">Embed Color</label>
+    <input id="embedColor" placeholder="#7289da or 7506394" />
+  </div>
 
   <button id="controlButton" onclick="toggleSending()">Start Sending</button>
+
   <div id="progressBar"></div>
 
   <script>
@@ -118,7 +185,6 @@
 
         let body = {};
 
-        // Handle embed
         const hasEmbed = embedTitle || embedDescription || embedColor;
         if (hasEmbed) {
           const embed = {
@@ -133,7 +199,6 @@
           body.embeds = [embed];
         }
 
-        // Optional content
         if (message) body.content = message;
 
         try {
@@ -149,7 +214,7 @@
             dots[i].className = "dot error";
             dots[i].textContent = "❌";
             await sleep(retryAfter);
-            i--; // retry same message
+            i--; // Retry this message
             continue;
           }
 
