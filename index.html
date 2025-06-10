@@ -34,9 +34,27 @@
     button:hover {
       background-color: #4752c4;
     }
-    #status {
+    #progressBar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       margin-top: 20px;
-      white-space: pre-wrap;
+      max-width: 400px;
+    }
+    .dot {
+      font-size: 20px;
+      margin: 4px;
+      width: 20px;
+      text-align: center;
+    }
+    .pending {
+      color: gray;
+    }
+    .sent {
+      color: lightgreen;
+    }
+    .error {
+      color: red;
     }
   </style>
 </head>
@@ -45,7 +63,7 @@
   <input id="webhookUrl" placeholder="Discord Webhook URL" />
   <textarea id="message" placeholder="Enter your message..."></textarea>
   <button onclick="sendMessages()">Send 30 Times</button>
-  <div id="status"></div>
+  <div id="progressBar"></div>
 
   <script>
     async function sleep(ms) {
@@ -55,21 +73,30 @@
     async function sendMessages() {
       const webhookUrl = document.getElementById("webhookUrl").value.trim();
       const message = document.getElementById("message").value.trim();
-      const status = document.getElementById("status");
+      const progressBar = document.getElementById("progressBar");
 
       if (!webhookUrl || !webhookUrl.startsWith("https://discord.com/api/webhooks/")) {
-        status.innerText = "❌ Invalid Discord webhook URL.";
+        alert("❌ Invalid Discord webhook URL.");
         return;
       }
 
       if (!message) {
-        status.innerText = "❌ Message cannot be empty.";
+        alert("❌ Message cannot be empty.");
         return;
       }
 
-      status.innerText = "Sending messages...\n";
+      // Initialize progress bar
+      progressBar.innerHTML = "";
+      const dots = [];
+      for (let i = 0; i < 30; i++) {
+        const span = document.createElement("span");
+        span.className = "dot pending";
+        span.textContent = "•";
+        progressBar.appendChild(span);
+        dots.push(span);
+      }
 
-      for (let i = 1; i <= 30; i++) {
+      for (let i = 0; i < 30; i++) {
         try {
           const response = await fetch(webhookUrl, {
             method: "POST",
@@ -82,27 +109,27 @@
           if (response.status === 429) {
             const data = await response.json();
             const retryAfter = data.retry_after || 1000;
-            status.innerText += `⏳ Rate limited. Waiting ${retryAfter}ms before retrying...\n`;
+            dots[i].className = "dot error";
+            dots[i].textContent = "❌";
             await sleep(retryAfter);
             i--; // Retry the same message
             continue;
           }
 
           if (!response.ok) {
-            const text = await response.text();
-            status.innerText += `❌ Message ${i} failed: ${response.status} ${response.statusText}\n${text}\n`;
-            return;
+            dots[i].className = "dot error";
+            dots[i].textContent = "❌";
+            continue;
           }
 
-          status.innerText += `✅ Sent message ${i} of 30\n`;
+          dots[i].className = "dot sent";
+          dots[i].textContent = "✅";
         } catch (error) {
-          status.innerText += `❌ Failed to send message ${i}. See console.\n`;
-          console.error(error);
-          return;
+          dots[i].className = "dot error";
+          dots[i].textContent = "❌";
+          console.error("Failed to send:", error);
         }
       }
-
-      status.innerText += "\n✅ All 30 messages sent successfully!";
     }
   </script>
 </body>
