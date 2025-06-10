@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Webhook Repeater</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e2f;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+    }
+    input, textarea, button {
+      margin: 10px;
+      padding: 10px;
+      width: 300px;
+      border-radius: 5px;
+      border: none;
+    }
+    textarea {
+      height: 100px;
+      resize: none;
+    }
+    button {
+      background: #4caf50;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .status {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Discord Webhook Repeater (5x)</h1>
+  <input id="webhookUrl" placeholder="Paste your Discord Webhook URL" />
+  <textarea id="message" placeholder="Enter your message..."></textarea>
+  <button onclick="sendMessages()">Send 5 Times</button>
+  <div class="status" id="status"></div>
+
+  <script>
+    async function sendMessages() {
+      const webhookUrl = document.getElementById('webhookUrl').value;
+      const message = document.getElementById('message').value;
+      const status = document.getElementById('status');
+
+      if (!webhookUrl.startsWith("https://discord.com/api/webhooks/")) {
+        status.innerText = "Invalid Discord webhook URL.";
+        return;
+      }
+
+      status.innerText = "Sending messages...";
+
+      for (let i = 0; i < 5; i++) {
+        try {
+          await fetch(webhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ content: message }),
+          });
+        } catch (err) {
+          status.innerText = "Error sending messages. Check console.";
+          console.error(err);
+          return;
+        }
+      }
+
+      status.innerText = "✅ Sent 5 messages successfully.";
+    }
+  </script>
+</body>
+</html>
