@@ -3,79 +3,93 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Webhook Repeater</title>
+  <title>Webhook Repeater (5x)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #1e1e2f;
+      background: #121212;
       color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 50px;
+      padding: 40px;
     }
     input, textarea, button {
       margin: 10px;
-      padding: 10px;
-      width: 300px;
-      border-radius: 5px;
+      padding: 12px;
+      width: 320px;
       border: none;
+      border-radius: 6px;
     }
     textarea {
       height: 100px;
       resize: none;
     }
     button {
-      background: #4caf50;
+      background-color: #5865F2;
       color: white;
-      cursor: pointer;
       font-weight: bold;
+      cursor: pointer;
     }
     button:hover {
-      background: #45a049;
+      background-color: #4752c4;
     }
-    .status {
+    #status {
       margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>Discord Webhook Repeater (5x)</h1>
-  <input id="webhookUrl" placeholder="Paste your Discord Webhook URL" />
+  <h2>Send Message 5x to Discord Webhook</h2>
+  <input id="webhookUrl" placeholder="Discord Webhook URL" />
   <textarea id="message" placeholder="Enter your message..."></textarea>
   <button onclick="sendMessages()">Send 5 Times</button>
-  <div class="status" id="status"></div>
+  <div id="status"></div>
 
   <script>
     async function sendMessages() {
-      const webhookUrl = document.getElementById('webhookUrl').value;
-      const message = document.getElementById('message').value;
-      const status = document.getElementById('status');
+      const webhookUrl = document.getElementById("webhookUrl").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const status = document.getElementById("status");
 
-      if (!webhookUrl.startsWith("https://discord.com/api/webhooks/")) {
-        status.innerText = "Invalid Discord webhook URL.";
+      if (!webhookUrl || !webhookUrl.startsWith("https://discord.com/api/webhooks/")) {
+        status.innerText = "❌ Invalid Discord webhook URL.";
+        return;
+      }
+
+      if (!message) {
+        status.innerText = "❌ Message cannot be empty.";
         return;
       }
 
       status.innerText = "Sending messages...";
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 1; i <= 5; i++) {
         try {
-          await fetch(webhookUrl, {
+          const response = await fetch(webhookUrl, {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "application/json"
             },
-            body: JSON.stringify({ content: message }),
+            body: JSON.stringify({ content: message })
           });
-        } catch (err) {
-          status.innerText = "Error sending messages. Check console.";
-          console.error(err);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            status.innerText = `❌ Error on message ${i}: ${response.status} ${response.statusText}\n${errorText}`;
+            return;
+          }
+
+          status.innerText = `✅ Sent message ${i} of 5...`;
+          await new Promise(res => setTimeout(res, 500)); // slight delay to avoid ratelimit
+        } catch (error) {
+          status.innerText = `❌ Failed to send message ${i}. See console.`;
+          console.error("Error sending message:", error);
           return;
         }
       }
 
-      status.innerText = "✅ Sent 5 messages successfully.";
+      status.innerText = "✅ All 5 messages sent successfully!";
     }
   </script>
 </body>
