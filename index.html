@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Webhook Repeater (30x)</title>
+  <title>Webhook Repeater (Advanced)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,7 +22,7 @@
       border-radius: 6px;
     }
     textarea {
-      height: 100px;
+      height: 80px;
       resize: none;
     }
     button {
@@ -47,47 +47,64 @@
       width: 20px;
       text-align: center;
     }
-    .pending {
-      color: gray;
-    }
-    .sent {
-      color: lightgreen;
-    }
-    .error {
-      color: red;
-    }
+    .pending { color: gray; }
+    .sent { color: lightgreen; }
+    .error { color: red; }
   </style>
 </head>
 <body>
   <h2>Send Message 30x to Discord Webhook</h2>
+
   <input id="webhookUrl" placeholder="Discord Webhook URL" />
-  <textarea id="message" placeholder="Enter your message..."></textarea>
-  <button onclick="sendMessages()">Send 30 Times</button>
+  <textarea id="message" placeholder="Enter message (optional if using embed)"></textarea>
+
+  <h4 style="margin-top:20px;">Embed (Optional)</h4>
+  <input id="embedTitle" placeholder="Embed Title" />
+  <textarea id="embedDescription" placeholder="Embed Description"></textarea>
+  <input id="embedColor" placeholder="Embed Color (Hex or Decimal)" />
+
+  <button id="controlButton" onclick="toggleSending()">Start Sending</button>
   <div id="progressBar"></div>
 
   <script>
-    async function sleep(ms) {
+    let sending = false;
+
+    function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function toggleSending() {
+      const btn = document.getElementById("controlButton");
+
+      if (sending) {
+        sending = false;
+        btn.textContent = "Start Sending";
+        return;
+      }
+
+      sending = true;
+      btn.textContent = "Stop Sending";
+      await sendMessages();
+      btn.textContent = "Start Sending";
     }
 
     async function sendMessages() {
       const webhookUrl = document.getElementById("webhookUrl").value.trim();
       const message = document.getElementById("message").value.trim();
+      const embedTitle = document.getElementById("embedTitle").value.trim();
+      const embedDescription = document.getElementById("embedDescription").value.trim();
+      const embedColor = document.getElementById("embedColor").value.trim();
       const progressBar = document.getElementById("progressBar");
 
       if (!webhookUrl || !webhookUrl.startsWith("https://discord.com/api/webhooks/")) {
         alert("❌ Invalid Discord webhook URL.");
+        sending = false;
         return;
       }
 
-      if (!message) {
-        alert("❌ Message cannot be empty.");
-        return;
-      }
-
-      // Initialize progress bar
       progressBar.innerHTML = "";
       const dots = [];
+
       for (let i = 0; i < 30; i++) {
         const span = document.createElement("span");
         span.className = "dot pending";
@@ -97,13 +114,33 @@
       }
 
       for (let i = 0; i < 30; i++) {
+        if (!sending) break;
+
+        let body = {};
+
+        // Handle embed
+        const hasEmbed = embedTitle || embedDescription || embedColor;
+        if (hasEmbed) {
+          const embed = {
+            title: embedTitle || undefined,
+            description: embedDescription || undefined,
+          };
+          if (embedColor) {
+            embed.color = embedColor.startsWith("#")
+              ? parseInt(embedColor.slice(1), 16)
+              : parseInt(embedColor);
+          }
+          body.embeds = [embed];
+        }
+
+        // Optional content
+        if (message) body.content = message;
+
         try {
           const response = await fetch(webhookUrl, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ content: message })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
           });
 
           if (response.status === 429) {
@@ -112,7 +149,7 @@
             dots[i].className = "dot error";
             dots[i].textContent = "❌";
             await sleep(retryAfter);
-            i--; // Retry the same message
+            i--; // retry same message
             continue;
           }
 
@@ -125,11 +162,13 @@
           dots[i].className = "dot sent";
           dots[i].textContent = "✅";
         } catch (error) {
+          console.error("Send error:", error);
           dots[i].className = "dot error";
           dots[i].textContent = "❌";
-          console.error("Failed to send:", error);
         }
       }
+
+      sending = false;
     }
   </script>
 </body>
