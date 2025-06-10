@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Webhook Repeater (5x)</title>
+  <title>Webhook Repeater (30x)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -40,10 +40,10 @@
   </style>
 </head>
 <body>
-  <h2>Send Message 5x to Discord Webhook</h2>
+  <h2>Send Message 30x to Discord Webhook</h2>
   <input id="webhookUrl" placeholder="Discord Webhook URL" />
   <textarea id="message" placeholder="Enter your message..."></textarea>
-  <button onclick="sendMessages()">Send 5 Times</button>
+  <button onclick="sendMessages()">Send 30 Times</button>
   <div id="status"></div>
 
   <script>
@@ -79,9 +79,6 @@
             status.innerText = `❌ Error on message ${i}: ${response.status} ${response.statusText}\n${errorText}`;
             return;
           }
-
-          status.innerText = `✅ Sent message ${i} of 5...`;
-          await new Promise(res => setTimeout(res, 500)); // slight delay to avoid ratelimit
         } catch (error) {
           status.innerText = `❌ Failed to send message ${i}. See console.`;
           console.error("Error sending message:", error);
@@ -89,7 +86,7 @@
         }
       }
 
-      status.innerText = "✅ All 5 messages sent successfully!";
+      status.innerText = "✅ All 30 messages sent successfully!";
     }
   </script>
 </body>
